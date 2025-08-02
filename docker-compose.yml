@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Backend Flask
+  backend:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:meicontrol123@db:5432/meicontrol
+      - FLASK_ENV=production
+    depends_on:
+      - db
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+  # Frontend React (para testes locais)
+  frontend:
+    build: 
+      context: ./meicontrol-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://localhost:5001/api
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Banco PostgreSQL
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=meicontrol
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=meicontrol123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_schema.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  # Redis para cache (opcional)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

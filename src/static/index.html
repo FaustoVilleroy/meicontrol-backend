@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEIControl - Gestão Financeira para MEI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1a2332;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 2px solid #374151;
+        }
+
+        .header h1 {
+            color: #ffffff;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #9ca3af;
+            font-size: 1.1rem;
+        }
+
+        .auth-section {
+            background-color: #374151;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .auth-forms {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e5e7eb;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            background-color: #1f2937;
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        button {
+            background-color: #dc2626;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #b91c1c;
+        }
+
+        .dashboard {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background-color: #374151;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h3 {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            text-align: center;
+        }
+
+        .summary-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .message {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .message.success {
+            background-color: #065f46;
+            color: #d1fae5;
+            border: 1px solid #10b981;
+        }
+
+        .message.error {
+            background-color: #7f1d1d;
+            color: #fecaca;
+            border: 1px solid #dc2626;
+        }
+
+        .user-info {
+            background-color: #374151;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .logout-btn {
+            background-color: #6b7280;
+            margin-top: 15px;
+            width: auto;
+            padding: 8px 16px;
+        }
+
+        .logout-btn:hover {
+            background-color: #4b5563;
+        }
+
+        @media (max-width: 768px) {
+            .auth-forms {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MEIControl</h1>
+            <p>Sistema de Gestão Financeira para Microempreendedores Individuais</p>
+        </div>
+
+        <div id="messageArea"></div>
+
+        <div id="userInfo" class="user-info">
+            <h3>Bem-vindo(a), <span id="userName"></span></h3>
+            <p>CNPJ: <span id="userCnpj"></span></p>
+            <p>Plano: <span id="userPlano"></span></p>
+            <button class="logout-btn" onclick="logout()">Sair</button>
+        </div>
+
+        <div id="authSection" class="auth-section">
+            <div class="auth-forms">
+                <div>
+                    <h3>Login</h3>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginEmail">Email:</label>
+                            <input type="email" id="loginEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Senha:</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit">Entrar</button>
+                    </form>
+                </div>
+
+                <div>
+                    <h3>Cadastro</h3>
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label for="registerNome">Nome:</label>
+                            <input type="text" id="registerNome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerEmail">Email:</label>
+                            <input type="email" id="registerEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerCnpj">CNPJ:</label>
+                            <input type="text" id="registerCnpj" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerCategoria">Categoria MEI:</label>
+                            <select id="registerCategoria" required>
+                                <option value="">Selecione...</option>
+                                <option value="comercio">Comércio</option>
+                                <option value="servicos">Serviços</option>
+                                <option value="industria">Indústria</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Senha:</label>
+                            <input type="password" id="registerPassword" required>
+                        </div>
+                        <button type="submit">Cadastrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="dashboard" class="dashboard">
+            <div class="card">
+                <h3>Adicionar Receita</h3>
+                <form id="receitaForm">
+                    <div class="form-group">
+                        <label for="receitaDescricao">Descrição:</label>
+                        <input type="text" id="receitaDescricao" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="receitaValor">Valor (R$):</label>
+                        <input type="number" id="receitaValor" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="receitaData">Data:</label>
+                        <input type="date" id="receitaData" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="receitaCategoria">Categoria:</label>
+                        <select id="receitaCategoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="comercio">Comércio</option>
+                            <option value="servicos">Serviços</option>
+                            <option value="industria">Indústria</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <button type="submit">Adicionar Receita</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Adicionar Despesa</h3>
+                <form id="despesaForm">
+                    <div class="form-group">
+                        <label for="despesaDescricao">Descrição:</label>
+                        <input type="text" id="despesaDescricao" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="despesaValor">Valor (R$):</label>
+                        <input type="number" id="despesaValor" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="despesaData">Data:</label>
+                        <input type="date" id="despesaData" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="despesaCategoria">Categoria:</label>
+                        <select id="despesaCategoria" required>
+                            <option value="">Selecione...</option>
+                            <option value="material">Material</option>
+                            <option value="equipamento">Equipamento</option>
+                            <option value="servicos">Serviços</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <button type="submit">Adicionar Despesa</button>
+                </form>
+            </div>
+
+            <div class="card summary-card">
+                <h3>Resumo do Mês</h3>
+                <div>
+                    <p>Receitas</p>
+                    <div class="summary-value" id="totalReceitas">R$ 0,00</div>
+                </div>
+                <div>
+                    <p>Despesas</p>
+                    <div class="summary-value" id="totalDespesas">R$ 0,00</div>
+                </div>
+                <div>
+                    <p>Saldo</p>
+                    <div class="summary-value" id="saldo">R$ 0,00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Upload de Nota Fiscal</h3>
+                <form id="notaFiscalForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="notaArquivo">Arquivo (PDF, JPG, PNG):</label>
+                        <input type="file" id="notaArquivo" accept=".pdf,.jpg,.jpeg,.png" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="notaTipo">Tipo:</label>
+                        <select id="notaTipo" required>
+                            <option value="entrada">Entrada (Receita)</option>
+                            <option value="saida">Saída (Despesa)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notaCategoria">Categoria:</label>
+                        <select id="notaCategoria">
+                            <option value="">Selecione...</option>
+                            <option value="comercio">Comércio</option>
+                            <option value="servicos">Serviços</option>
+                            <option value="industria">Indústria</option>
+                            <option value="outros">Outros</option>
+                        </select>
+                    </div>
+                    <button type="submit">Enviar Nota Fiscal</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>Relatórios Obrigatórios</h3>
+                <div class="form-group">
+                    <label for="relatorioMes">Mês:</label>
+                    <select id="relatorioMes">
+                        <option value="1">Janeiro</option>
+                        <option value="2">Fevereiro</option>
+                        <option value="3">Março</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Maio</option>
+                        <option value="6">Junho</option>
+                        <option value="7">Julho</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Setembro</option>
+                        <option value="10">Outubro</option>
+                        <option value="11">Novembro</option>
+                        <option value="12">Dezembro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="relatorioAno">Ano:</label>
+                    <select id="relatorioAno">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+                <button onclick="gerarRelatorioMensal()" style="margin-bottom: 10px;">Gerar Relatório Mensal</button>
+                <button onclick="downloadRelatorioMensalPDF()" style="margin-bottom: 10px;">Download PDF</button>
+                <button onclick="downloadRelatorioMensalExcel()" style="margin-bottom: 10px;">Download Excel</button>
+                <button onclick="gerarRelatorioAnual()">Gerar Relatório Anual (DASN-SIMEI)</button>
+            </div>
+
+            <div class="card">
+                <h3>Notificações</h3>
+                <button onclick="testarNotificacao()" style="margin-bottom: 10px;">Enviar Email de Teste</button>
+                <button onclick="verificarProximosVencimentos()" style="margin-bottom: 10px;">Próximos Vencimentos</button>
+                <button onclick="configurarNotificacoes()">Configurar Notificações</button>
+            </div>
+
+            <div class="card" id="adminPanel" style="display: none;">
+                <h3>Painel Administrativo</h3>
+                <button onclick="carregarDashboardAdmin()" style="margin-bottom: 10px;">Dashboard Admin</button>
+                <button onclick="listarTodosUsuarios()" style="margin-bottom: 10px;">Listar Usuários</button>
+                <button onclick="metricasFinanceiras()" style="margin-bottom: 10px;">Métricas Financeiras</button>
+                <button onclick="metricasUso()">Métricas de Uso</button>
+            </div>
+
+            <div class="card">
+                <h3>Ações</h3>
+                <button onclick="carregarDashboard()" style="margin-bottom: 10px;">Atualizar Dashboard</button>
+                <button onclick="listarReceitas()" style="margin-bottom: 10px;">Listar Receitas</button>
+                <button onclick="listarDespesas()" style="margin-bottom: 10px;">Listar Despesas</button>
+                <button onclick="listarNotasFiscais()" style="margin-bottom: 10px;">Listar Notas Fiscais</button>
+                <button onclick="verificarStatusObrigacoes()">Verificar Status Obrigações</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let currentToken = localStorage.getItem('token');
+
+        // Verificar se já está logado
+        if (currentToken) {
+            verificarToken();
+        }
+
+        // Event listeners
+        document.getElementById('loginForm').addEventListener('submit', login);
+        document.getElementById('registerForm').addEventListener('submit', register);
+        document.getElementById('receitaForm').addEventListener('submit', adicionarReceita);
+        document.getElementById('despesaForm').addEventListener('submit', adicionarDespesa);
+        document.getElementById('notaFiscalForm').addEventListener('submit', uploadNotaFiscal);
+
+        function showMessage(message, type = 'success') {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        async function login(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentToken = data.token;
+                    localStorage.setItem('token', currentToken);
+                    showUserInfo(data.user);
+                    showMessage('Login realizado com sucesso!');
+                    document.getElementById('loginForm').reset();
+                    carregarDashboard();
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao fazer login: ' + error.message, 'error');
+            }
+        }
+
+        async function register(e) {
+            e.preventDefault();
+            
+            const nome = document.getElementById('registerNome').value;
+            const email = document.getElementById('registerEmail').value;
+            const cnpj = document.getElementById('registerCnpj').value;
+            const categoria_mei = document.getElementById('registerCategoria').value;
+            const password = document.getElementById('registerPassword').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ nome, email, cnpj, categoria_mei, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentToken = data.token;
+                    localStorage.setItem('token', currentToken);
+                    showUserInfo(data.user);
+                    showMessage('Cadastro realizado com sucesso!');
+                    document.getElementById('registerForm').reset();
+                    carregarDashboard();
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao fazer cadastro: ' + error.message, 'error');
+            }
+        }
+
+        async function verificarToken() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showUserInfo(data.user);
+                    carregarDashboard();
+                } else {
+                    logout();
+                }
+            } catch (error) {
+                logout();
+            }
+        }
+
+        function showUserInfo(user) {
+            document.getElementById('userName').textContent = user.nome;
+            document.getElementById('userCnpj').textContent = user.cnpj;
+            document.getElementById('userPlano').textContent = user.plano.charAt(0).toUpperCase() + user.plano.slice(1);
+            
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'grid';
+        }
+
+        function logout() {
+            currentToken = null;
+            localStorage.removeItem('token');
+            
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            
+            showMessage('Logout realizado com sucesso!');
+        }
+
+        async function adicionarReceita(e) {
+            e.preventDefault();
+            
+            const descricao = document.getElementById('receitaDescricao').value;
+            const valor = document.getElementById('receitaValor').value;
+            const data_receita = document.getElementById('receitaData').value;
+            const categoria = document.getElementById('receitaCategoria').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/receitas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                    body: JSON.stringify({ descricao, valor, data_receita, categoria }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Receita adicionada com sucesso!');
+                    document.getElementById('receitaForm').reset();
+                    carregarDashboard();
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao adicionar receita: ' + error.message, 'error');
+            }
+        }
+
+        async function adicionarDespesa(e) {
+            e.preventDefault();
+            
+            const descricao = document.getElementById('despesaDescricao').value;
+            const valor = document.getElementById('despesaValor').value;
+            const data_despesa = document.getElementById('despesaData').value;
+            const categoria = document.getElementById('despesaCategoria').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/despesas`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                    body: JSON.stringify({ descricao, valor, data_despesa, categoria }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Despesa adicionada com sucesso!');
+                    document.getElementById('despesaForm').reset();
+                    carregarDashboard();
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao adicionar despesa: ' + error.message, 'error');
+            }
+        }
+
+        async function carregarDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    document.getElementById('totalReceitas').textContent = 
+                        'R$ ' + data.mes_atual.total_receitas.toFixed(2).replace('.', ',');
+                    document.getElementById('totalDespesas').textContent = 
+                        'R$ ' + data.mes_atual.total_despesas.toFixed(2).replace('.', ',');
+                    document.getElementById('saldo').textContent = 
+                        'R$ ' + data.mes_atual.saldo.toFixed(2).replace('.', ',');
+                } else {
+                    showMessage('Erro ao carregar dashboard', 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao carregar dashboard: ' + error.message, 'error');
+            }
+        }
+
+        async function listarReceitas() {
+            try {
+                const response = await fetch(`${API_BASE}/receitas`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Receitas:', data.receitas);
+                    showMessage(`${data.total} receitas encontradas. Veja o console para detalhes.`);
+                } else {
+                    showMessage('Erro ao listar receitas', 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao listar receitas: ' + error.message, 'error');
+            }
+        }
+
+        async function listarDespesas() {
+            try {
+                const response = await fetch(`${API_BASE}/despesas`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Despesas:', data.despesas);
+                    showMessage(`${data.total} despesas encontradas. Veja o console para detalhes.`);
+                } else {
+                    showMessage('Erro ao listar despesas', 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao listar despesas: ' + error.message, 'error');
+            }
+        }
+
+        async function uploadNotaFiscal(e) {
+            e.preventDefault();
+            
+            const arquivo = document.getElementById('notaArquivo').files[0];
+            const tipo = document.getElementById('notaTipo').value;
+            const categoria = document.getElementById('notaCategoria').value;
+
+            if (!arquivo) {
+                showMessage('Selecione um arquivo', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('arquivo', arquivo);
+            formData.append('tipo', tipo);
+            formData.append('categoria', categoria);
+
+            try {
+                const response = await fetch(`${API_BASE}/notas-fiscais/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Nota fiscal enviada com sucesso!');
+                    document.getElementById('notaFiscalForm').reset();
+                    
+                    // Mostrar informações extraídas se houver
+                    if (data.informacoes_extraidas && Object.keys(data.informacoes_extraidas).length > 0) {
+                        console.log('Informações extraídas:', data.informacoes_extraidas);
+                        showMessage('Informações extraídas automaticamente. Veja o console para detalhes.');
+                    }
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao enviar nota fiscal: ' + error.message, 'error');
+            }
+        }
+
+        async function listarNotasFiscais() {
+            try {
+                const response = await fetch(`${API_BASE}/notas-fiscais`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Notas Fiscais:', data.notas_fiscais);
+                    showMessage(`${data.total} notas fiscais encontradas. Veja o console para detalhes.`);
+                } else {
+                    showMessage('Erro ao listar notas fiscais', 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao listar notas fiscais: ' + error.message, 'error');
+            }
+        }
+
+        async function gerarRelatorioMensal() {
+            const mes = document.getElementById('relatorioMes').value;
+            const ano = document.getElementById('relatorioAno').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/relatorios/mensal/${mes}/${ano}`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(`Relatório mensal de ${mes}/${ano} gerado com sucesso!`);
+                    console.log('Relatório:', data.relatorio);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao gerar relatório: ' + error.message, 'error');
+            }
+        }
+
+        async function downloadRelatorioMensalPDF() {
+            const mes = document.getElementById('relatorioMes').value;
+            const ano = document.getElementById('relatorioAno').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/relatorios/mensal/${mes}/${ano}/pdf`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `relatorio_mensal_${mes.padStart(2, '0')}_${ano}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    showMessage('Download do PDF iniciado!');
+                } else {
+                    const data = await response.json();
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao baixar PDF: ' + error.message, 'error');
+            }
+        }
+
+        async function downloadRelatorioMensalExcel() {
+            const mes = document.getElementById('relatorioMes').value;
+            const ano = document.getElementById('relatorioAno').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/relatorios/mensal/${mes}/${ano}/excel`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `relatorio_mensal_${mes.padStart(2, '0')}_${ano}.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    showMessage('Download do Excel iniciado!');
+                } else {
+                    const data = await response.json();
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao baixar Excel: ' + error.message, 'error');
+            }
+        }
+
+        async function gerarRelatorioAnual() {
+            const ano = document.getElementById('relatorioAno').value;
+            const teveFunc = confirm('Você teve funcionário durante o ano ' + ano + '?');
+
+            try {
+                const response = await fetch(`${API_BASE}/relatorios/anual/${ano}?teve_funcionario=${teveFunc}`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(`Relatório anual de ${ano} gerado com sucesso!`);
+                    console.log('Relatório Anual:', data.relatorio_anual);
+                    
+                    // Mostrar informações importantes
+                    const relatorio = data.relatorio_anual;
+                    alert(`RELATÓRIO ANUAL ${ano} (DASN-SIMEI)
+                    
+Faturamento Total: R$ ${relatorio.total_anual_receitas.toFixed(2)}
+Limite MEI: R$ ${relatorio.limite_faturamento_mei.toFixed(2)}
+Percentual do Limite: ${relatorio.percentual_limite.toFixed(1)}%
+Dentro do Limite: ${relatorio.dentro_limite ? 'SIM' : 'NÃO'}
+
+Teve Funcionário: ${relatorio.teve_funcionario ? 'SIM' : 'NÃO'}
+
+Veja o console para detalhes completos.`);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao gerar relatório anual: ' + error.message, 'error');
+            }
+        }
+
+        async function verificarStatusObrigacoes() {
+            try {
+                const response = await fetch(`${API_BASE}/relatorios/status-obrigacoes`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const status = data.status_obrigacoes;
+                    console.log('Status das Obrigações:', status);
+                    
+                    let mensagem = `STATUS DAS OBRIGAÇÕES:
+
+RELATÓRIO MENSAL (${status.relatorio_mensal.mes_referencia}):
+- Prazo: ${status.relatorio_mensal.prazo}
+- Entregue: ${status.relatorio_mensal.entregue ? 'SIM' : 'NÃO'}
+- Em Atraso: ${status.relatorio_mensal.em_atraso ? 'SIM' : 'NÃO'}
+
+DASN-SIMEI (${status.dasn_simei.ano_referencia}):
+- Prazo: ${status.dasn_simei.prazo}
+- Relatórios Completos: ${status.dasn_simei.relatorios_mensais_completos ? 'SIM' : 'NÃO'}
+- Em Atraso: ${status.dasn_simei.em_atraso ? 'SIM' : 'NÃO'}`;
+
+                    if (status.alertas.length > 0) {
+                        mensagem += '\n\nALERTAS:';
+                        status.alertas.forEach(alerta => {
+                            mensagem += `\n- ${alerta.titulo}: ${alerta.mensagem}`;
+                        });
+                    }
+
+                    alert(mensagem);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao verificar status: ' + error.message, 'error');
+            }
+        }
+
+        // Verificar se o usuário é admin e mostrar painel
+        async function verificarAdmin() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                if (response.ok) {
+                    document.getElementById('adminPanel').style.display = 'block';
+                }
+            } catch (error) {
+                // Usuário não é admin, painel permanece oculto
+            }
+        }
+
+        async function testarNotificacao() {
+            try {
+                const response = await fetch(`${API_BASE}/notificacoes/enviar-teste`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tipo: 'relatorio_mensal'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Email de teste enviado com sucesso!');
+                    console.log('Detalhes:', data);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao enviar email de teste: ' + error.message, 'error');
+            }
+        }
+
+        async function verificarProximosVencimentos() {
+            try {
+                const response = await fetch(`${API_BASE}/notificacoes/proximos-vencimentos`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const vencimentos = data.proximos_vencimentos;
+                    let mensagem = 'PRÓXIMOS VENCIMENTOS:\n\n';
+                    
+                    for (const [tipo, info] of Object.entries(vencimentos)) {
+                        const tipoNome = {
+                            'relatorio_mensal': 'Relatório Mensal',
+                            'das': 'Pagamento DAS',
+                            'dasn_simei': 'DASN-SIMEI'
+                        };
+                        
+                        mensagem += `${tipoNome[tipo] || tipo}:\n`;
+                        mensagem += `- Data: ${info.data}\n`;
+                        mensagem += `- Dias restantes: ${info.dias_restantes}\n`;
+                        mensagem += `- Status: ${info.status}\n\n`;
+                    }
+
+                    alert(mensagem);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao verificar vencimentos: ' + error.message, 'error');
+            }
+        }
+
+        async function configurarNotificacoes() {
+            try {
+                const response = await fetch(`${API_BASE}/notificacoes/configuracoes`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const config = data.configuracoes;
+                    console.log('Configurações atuais:', config);
+                    
+                    const novaConfig = {
+                        email_relatorio_mensal: confirm('Receber emails sobre relatório mensal?'),
+                        email_das: confirm('Receber emails sobre pagamento DAS?'),
+                        email_dasn_simei: confirm('Receber emails sobre DASN-SIMEI?'),
+                        dias_antecedencia_relatorio: parseInt(prompt('Dias de antecedência para relatório mensal:', '5') || '5'),
+                        dias_antecedencia_das: parseInt(prompt('Dias de antecedência para DAS:', '5') || '5'),
+                        dias_antecedencia_dasn: parseInt(prompt('Dias de antecedência para DASN-SIMEI:', '30') || '30')
+                    };
+
+                    const updateResponse = await fetch(`${API_BASE}/notificacoes/configuracoes`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${currentToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(novaConfig)
+                    });
+
+                    const updateData = await updateResponse.json();
+
+                    if (updateResponse.ok) {
+                        showMessage('Configurações de notificação atualizadas!');
+                    } else {
+                        showMessage(updateData.error, 'error');
+                    }
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao configurar notificações: ' + error.message, 'error');
+            }
+        }
+
+        async function carregarDashboardAdmin() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/dashboard`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Dashboard Admin:', data);
+                    
+                    let resumo = `DASHBOARD ADMINISTRATIVO:
+
+USUÁRIOS:
+- Total: ${data.metricas_gerais.total_usuarios}
+- Ativos: ${data.metricas_gerais.usuarios_ativos}
+- Novos no mês: ${data.metricas_gerais.novos_usuarios_mes}
+- Taxa crescimento: ${data.metricas_gerais.taxa_crescimento}%
+
+PLANOS:
+- Básico: ${data.distribuicao_planos.basico} (${data.distribuicao_planos.percentual_basico}%)
+- Avançado: ${data.distribuicao_planos.avancado} (${data.distribuicao_planos.percentual_avancado}%)
+
+RECEITA ESTIMADA:
+- Mensal: R$ ${data.receita_estimada.mensal_total}
+- Anual: R$ ${data.receita_estimada.anual_estimada}
+
+INADIMPLÊNCIA: ${data.status_pagamento.taxa_inadimplencia}%
+
+Veja o console para detalhes completos.`;
+
+                    alert(resumo);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao carregar dashboard admin: ' + error.message, 'error');
+            }
+        }
+
+        async function listarTodosUsuarios() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/usuarios?per_page=50`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Lista de Usuários:', data);
+                    showMessage(`Carregados ${data.usuarios.length} usuários de ${data.total} total. Veja o console para detalhes.`);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao listar usuários: ' + error.message, 'error');
+            }
+        }
+
+        async function metricasFinanceiras() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/metricas/financeiras?periodo=6`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Métricas Financeiras:', data);
+                    
+                    const resumo = data.resumo_periodo;
+                    alert(`MÉTRICAS FINANCEIRAS (6 meses):
+
+Receita Total: R$ ${resumo.receita_total}
+Crescimento de Usuários: ${resumo.crescimento_usuarios}%
+Usuários Início: ${resumo.usuarios_inicio}
+Usuários Fim: ${resumo.usuarios_fim}
+Churn Médio: ${resumo.media_churn}%
+
+Veja o console para detalhes mensais.`);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao carregar métricas financeiras: ' + error.message, 'error');
+            }
+        }
+
+        async function metricasUso() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/metricas/uso`, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                    },
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('Métricas de Uso:', data);
+                    
+                    const eng = data.engajamento;
+                    let resumo = `MÉTRICAS DE USO:
+
+ENGAJAMENTO:
+- Usuários Ativos: ${eng.usuarios_ativos_total}
+
+FUNCIONALIDADES:`;
+
+                    eng.funcionalidades.forEach(func => {
+                        resumo += `\n- ${func.nome}: ${func.usuarios_ativos} usuários (${func.percentual_uso}%)`;
+                    });
+
+                    resumo += `\n\nATIVIDADE NO MÊS:
+- Receitas: ${data.atividade_mensal.receitas_criadas}
+- Despesas: ${data.atividade_mensal.despesas_criadas}
+- Notas Fiscais: ${data.atividade_mensal.notas_enviadas}
+- Relatórios: ${data.atividade_mensal.relatorios_gerados}
+
+Veja o console para categorias mais usadas.`;
+
+                    alert(resumo);
+                } else {
+                    showMessage(data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Erro ao carregar métricas de uso: ' + error.message, 'error');
+            }
+        }
+
+        // Definir mês e ano atuais como padrão
+        const hoje = new Date();
+        document.getElementById('relatorioMes').value = hoje.getMonth() + 1;
+        document.getElementById('relatorioAno').value = hoje.getFullYear();
+
+        // Definir data padrão como hoje
+        document.getElementById('receitaData').valueAsDate = new Date();
+        document.getElementById('despesaData').valueAsDate = new Date();
+        
+        // Verificar se é admin após login
+        if (currentToken) {
+            verificarAdmin();
+        }
+    </script>
+</body>
+</html>
+
